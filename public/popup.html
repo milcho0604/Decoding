@@ -3,24 +3,227 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Decoding Extension</title>
+  <title>디코더 도구</title>
   <style>
-    body {
-      width: 300px;
-      padding: 16px;
-      margin: 0;
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    * {
+      box-sizing: border-box;
     }
-    h1 {
-      font-size: 18px;
-      margin: 0 0 16px 0;
+    
+    body {
+      width: 500px;
+      min-height: 400px;
+      padding: 0;
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Malgun Gothic', sans-serif;
+      font-size: 14px;
+      background: #f5f5f5;
+    }
+    
+    .container {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+    }
+    
+    .header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 16px 20px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    .header h1 {
+      margin: 0;
+      font-size: 20px;
+      font-weight: 600;
+    }
+    
+    .content {
+      padding: 20px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    
+    .section {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    
+    .section label {
+      font-weight: 500;
+      color: #333;
+      font-size: 13px;
+    }
+    
+    .input-group {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+    
+    select {
+      padding: 8px 12px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      font-size: 13px;
+      background: white;
+      cursor: pointer;
+      flex: 1;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    
+    select:hover {
+      border-color: #667eea;
+    }
+    
+    select:focus {
+      border-color: #667eea;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+    
+    textarea {
+      width: 100%;
+      min-height: 120px;
+      padding: 12px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      font-family: 'Monaco', 'Menlo', 'Courier New', monospace;
+      font-size: 12px;
+      resize: vertical;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    
+    textarea:focus {
+      border-color: #667eea;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+    
+    .result-section {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    
+    .result-container {
+      flex: 1;
+      min-height: 150px;
+      padding: 12px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      background: white;
+      font-family: 'Monaco', 'Menlo', 'Courier New', monospace;
+      font-size: 12px;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      overflow-y: auto;
+      max-height: 300px;
+    }
+    
+    .result-container.error {
+      background: #fff5f5;
+      border-color: #fc8181;
+      color: #c53030;
+    }
+    
+    .result-container.success {
+      background: #f0fff4;
+      border-color: #68d391;
+    }
+    
+    .result-container.empty {
+      color: #999;
+      font-style: italic;
+    }
+    
+    .button-group {
+      display: flex;
+      gap: 8px;
+    }
+    
+    button {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+      flex: 1;
+    }
+    
+    .btn-primary {
+      background: #667eea;
+      color: white;
+    }
+    
+    .btn-primary:hover {
+      background: #5568d3;
+    }
+    
+    .btn-primary:active {
+      transform: scale(0.98);
+    }
+    
+    .btn-secondary {
+      background: #e2e8f0;
+      color: #4a5568;
+    }
+    
+    .btn-secondary:hover {
+      background: #cbd5e0;
+    }
+    
+    .metadata {
+      margin-top: 8px;
+      padding: 8px;
+      background: #f7fafc;
+      border-radius: 4px;
+      font-size: 11px;
+      color: #4a5568;
+    }
+    
+    .metadata-title {
+      font-weight: 600;
+      margin-bottom: 4px;
     }
   </style>
 </head>
 <body>
-  <h1>Decoding Extension</h1>
-  <p>Welcome to your Chrome extension!</p>
+  <div class="container">
+    <div class="header">
+      <h1>🔓 디코더 도구</h1>
+    </div>
+    <div class="content">
+      <div class="section">
+        <label for="decoder-type">디코딩 방식</label>
+        <select id="decoder-type">
+          <!-- 옵션은 JavaScript에서 동적으로 추가 -->
+        </select>
+      </div>
+      
+      <div class="section">
+        <label for="input-text">입력 텍스트</label>
+        <textarea id="input-text" placeholder="디코딩할 텍스트를 입력하세요..."></textarea>
+      </div>
+      
+      <div class="button-group">
+        <button class="btn-primary" id="decode-btn">디코딩</button>
+        <button class="btn-secondary" id="clear-btn">초기화</button>
+      </div>
+      
+      <div class="result-section">
+        <label>결과</label>
+        <div id="result-container" class="result-container empty">결과가 여기에 표시됩니다...</div>
+        <div id="metadata-container" class="metadata" style="display: none;"></div>
+      </div>
+    </div>
+  </div>
   <script src="popup.js"></script>
 </body>
 </html>
-

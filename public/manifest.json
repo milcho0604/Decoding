@@ -1,26 +1,16 @@
 {
   "manifest_version": 3,
-  "name": "Decoding Extension",
+  "name": "디코더 도구",
   "version": "1.0.0",
-  "description": "A Chrome extension built with TypeScript",
+  "description": "다양한 형식의 텍스트를 디코딩하는 도구 (URL, HTML, Base64, Hex, JWT, ROT13, GZIP 등)",
   "action": {
     "default_popup": "popup.html",
     "default_icon": {
-      "16": "icons/icon16.png",
-      "48": "icons/icon48.png",
       "128": "icons/icon128.png"
     }
   },
   "background": {
     "service_worker": "background.js"
   },
-  "content_scripts": [
-    {
-      "matches": ["<all_urls>"],
-      "js": ["content.js"]
-    }
-  ],
-
-  "permissions": ["activeTab", "scripting", "storage"],          
-  "host_permissions": ["http://*/*", "https://*/*"]
+  "permissions": []
 }
