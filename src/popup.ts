@@ -11,12 +11,18 @@ let metadataContainer: HTMLDivElement;
 // 초기화
 document.addEventListener('DOMContentLoaded', () => {
   // DOM 요소 가져오기
-  decoderTypeSelect = document.getElementById('decoder-type') as HTMLSelectElement;
+  decoderTypeSelect = document.getElementById(
+    'decoder-type'
+  ) as HTMLSelectElement;
   inputTextarea = document.getElementById('input-text') as HTMLTextAreaElement;
   decodeButton = document.getElementById('decode-btn') as HTMLButtonElement;
   clearButton = document.getElementById('clear-btn') as HTMLButtonElement;
-  resultContainer = document.getElementById('result-container') as HTMLDivElement;
-  metadataContainer = document.getElementById('metadata-container') as HTMLDivElement;
+  resultContainer = document.getElementById(
+    'result-container'
+  ) as HTMLDivElement;
+  metadataContainer = document.getElementById(
+    'metadata-container'
+  ) as HTMLDivElement;
 
   // 디코더 옵션 초기화
   initializeDecoderOptions();
@@ -34,11 +40,18 @@ document.addEventListener('DOMContentLoaded', () => {
     }, 100);
   });
 
-  // Enter + Ctrl/Cmd로 디코딩
+  // Enter로 디코딩 (Shift+Enter는 줄바꿈 허용)
   inputTextarea.addEventListener('keydown', (e) => {
-    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+    if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleDecode();
+    }
+  });
+
+  // ESC로 팝업 닫기
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      window.close();
     }
   });
 });
@@ -49,7 +62,7 @@ document.addEventListener('DOMContentLoaded', () => {
 function initializeDecoderOptions() {
   const decoders = DecoderService.getAvailableDecoders();
   decoderTypeSelect.innerHTML = '';
-  
+
   decoders.forEach(({ value, label }) => {
     const option = document.createElement('option');
     option.value = value;
@@ -76,28 +89,30 @@ function handleInputChange() {
  */
 async function handleDecode() {
   const input = inputTextarea.value.trim();
-  
+
   if (!input) {
     showResult('', false, '입력이 비어있습니다.');
     return;
   }
 
   const decoderType = decoderTypeSelect.value as DecoderType;
-  
+
   // 로딩 표시
   showResult('디코딩 중...', false);
   decodeButton.disabled = true;
 
   try {
     const result = await DecoderService.decode(input, decoderType);
-    
+
     if (result.success) {
       showResult(result.result, true, undefined, result.metadata);
-      
+
       // 자동 감지 모드에서 감지된 타입이 있으면 선택 표시
       if (decoderType === 'auto' && result.type !== 'auto') {
-        const detectedLabel = DecoderService.getAvailableDecoders()
-          .find(d => d.value === result.type)?.label || '';
+        const detectedLabel =
+          DecoderService.getAvailableDecoders().find(
+            (d) => d.value === result.type
+          )?.label || '';
         // 선택은 유지하되, 사용자에게 알림 (선택적)
       }
     } else {
@@ -113,12 +128,17 @@ async function handleDecode() {
 /**
  * 결과 표시
  */
-function showResult(text: string, success: boolean, error?: string, metadata?: any) {
+function showResult(
+  text: string,
+  success: boolean,
+  error?: string,
+  metadata?: any
+) {
   resultContainer.textContent = text || '결과가 없습니다.';
-  
+
   // 클래스 초기화
   resultContainer.classList.remove('empty', 'success', 'error');
-  
+
   if (!text || text === '결과가 여기에 표시됩니다...') {
     resultContainer.classList.add('empty');
   } else if (error || !success) {
@@ -131,17 +151,25 @@ function showResult(text: string, success: boolean, error?: string, metadata?: a
   if (metadata) {
     metadataContainer.style.display = 'block';
     let metadataHtml = '';
-    
+
     if (metadata.header) {
       metadataHtml += `<div class="metadata-title">JWT Header:</div>`;
-      metadataHtml += `<pre style="margin: 4px 0; white-space: pre-wrap;">${JSON.stringify(metadata.header, null, 2)}</pre>`;
+      metadataHtml += `<pre style="margin: 4px 0; white-space: pre-wrap;">${JSON.stringify(
+        metadata.header,
+        null,
+        2
+      )}</pre>`;
     }
-    
+
     if (metadata.payload) {
       metadataHtml += `<div class="metadata-title" style="margin-top: 8px;">JWT Payload:</div>`;
-      metadataHtml += `<pre style="margin: 4px 0; white-space: pre-wrap;">${JSON.stringify(metadata.payload, null, 2)}</pre>`;
+      metadataHtml += `<pre style="margin: 4px 0; white-space: pre-wrap;">${JSON.stringify(
+        metadata.payload,
+        null,
+        2
+      )}</pre>`;
     }
-    
+
     metadataContainer.innerHTML = metadataHtml;
   } else {
     metadataContainer.style.display = 'none';
