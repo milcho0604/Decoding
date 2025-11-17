@@ -7,6 +7,7 @@ let decodeButton: HTMLButtonElement;
 let clearButton: HTMLButtonElement;
 let resultContainer: HTMLDivElement;
 let metadataContainer: HTMLDivElement;
+let themeToggle: HTMLButtonElement;
 
 // 초기화
 document.addEventListener('DOMContentLoaded', async () => {
@@ -25,8 +26,12 @@ document.addEventListener('DOMContentLoaded', async () => {
   metadataContainer = document.getElementById(
     'metadata-container'
   ) as HTMLDivElement;
+  themeToggle = document.getElementById('theme-toggle') as HTMLButtonElement;
 
   console.log('DOM elements loaded');
+
+  // 다크모드 초기화
+  initializeTheme();
 
   // 디코더 옵션 초기화 및 저장된 타입 불러오기
   await initializeDecoderOptions();
@@ -67,7 +72,53 @@ document.addEventListener('DOMContentLoaded', async () => {
       window.close();
     }
   });
+
+  // 다크모드 토글 버튼
+  themeToggle.addEventListener('click', toggleTheme);
 });
+
+/**
+ * 다크모드 초기화
+ */
+async function initializeTheme() {
+  try {
+    if (
+      typeof chrome !== 'undefined' &&
+      chrome.storage &&
+      chrome.storage.local
+    ) {
+      const result = await chrome.storage.local.get(['darkMode']);
+      if (result.darkMode) {
+        document.body.classList.add('dark-mode');
+        themeToggle.textContent = '☀️';
+      } else {
+        themeToggle.textContent = '🌙';
+      }
+    }
+  } catch (error) {
+    console.error('Failed to load theme preference:', error);
+  }
+}
+
+/**
+ * 다크모드 토글
+ */
+async function toggleTheme() {
+  const isDarkMode = document.body.classList.toggle('dark-mode');
+  themeToggle.textContent = isDarkMode ? '☀️' : '🌙';
+
+  try {
+    if (
+      typeof chrome !== 'undefined' &&
+      chrome.storage &&
+      chrome.storage.local
+    ) {
+      await chrome.storage.local.set({ darkMode: isDarkMode });
+    }
+  } catch (error) {
+    console.error('Failed to save theme preference:', error);
+  }
+}
 
 /**
  * 디코더 옵션 초기화 및 저장된 타입 불러오기
