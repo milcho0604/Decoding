@@ -8,6 +8,7 @@ let clearButton: HTMLButtonElement;
 let resultContainer: HTMLDivElement;
 let metadataContainer: HTMLDivElement;
 let themeToggle: HTMLButtonElement;
+let copyButton: HTMLButtonElement;
 
 // 초기화
 document.addEventListener('DOMContentLoaded', async () => {
@@ -27,8 +28,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     'metadata-container'
   ) as HTMLDivElement;
   themeToggle = document.getElementById('theme-toggle') as HTMLButtonElement;
+  copyButton = document.getElementById('copy-btn') as HTMLButtonElement;
 
   console.log('DOM elements loaded');
+
+  // 초기 상태: 복사 버튼 비활성화
+  copyButton.disabled = true;
+  copyButton.style.opacity = '0.5';
+  copyButton.style.cursor = 'not-allowed';
 
   // 다크모드 초기화
   initializeTheme();
@@ -40,13 +47,14 @@ document.addEventListener('DOMContentLoaded', async () => {
   // 이벤트 리스너 등록
   decodeButton.addEventListener('click', handleDecode);
   clearButton.addEventListener('click', handleClear);
+  copyButton.addEventListener('click', handleCopy);
 
   // 디코더 타입 변경 시 저장
   decoderTypeSelect.addEventListener('change', () => {
     console.log('Decoder type changed event fired!');
     saveDecoderType();
   });
-  
+
   // 개발자 블로그 링크
   const devBlogLink = document.getElementById(
     'dev-blog-link'
@@ -272,10 +280,20 @@ function showResult(
 
   if (!text || text === '결과가 여기에 표시됩니다...') {
     resultContainer.classList.add('empty');
+    copyButton.disabled = true;
+    copyButton.style.opacity = '0.5';
+    copyButton.style.cursor = 'not-allowed';
   } else if (error || !success) {
     resultContainer.classList.add('error');
+    // 에러 메시지도 복사 가능하도록 활성화
+    copyButton.disabled = false;
+    copyButton.style.opacity = '1';
+    copyButton.style.cursor = 'pointer';
   } else {
     resultContainer.classList.add('success');
+    copyButton.disabled = false;
+    copyButton.style.opacity = '1';
+    copyButton.style.cursor = 'pointer';
   }
 
   // 메타데이터 표시 (JWT 등)
@@ -309,6 +327,68 @@ function showResult(
 }
 
 /**
+ * 결과 복사
+ */
+async function handleCopy() {
+  const resultText = resultContainer.textContent || '';
+
+  // 결과가 없거나 빈 상태일 때는 복사하지 않음
+  if (
+    !resultText ||
+    resultText === '결과가 여기에 표시됩니다...' ||
+    resultText === '결과가 없습니다.' ||
+    resultText === '디코딩 중...' ||
+    resultContainer.classList.contains('empty')
+  ) {
+    return;
+  }
+
+  try {
+    // 클립보드에 복사
+    await navigator.clipboard.writeText(resultText);
+
+    // 복사 성공 피드백
+    const originalText = copyButton.textContent;
+    copyButton.textContent = '✅ 복사됨';
+    copyButton.classList.add('copied');
+
+    // 2초 후 원래 텍스트로 복원
+    setTimeout(() => {
+      copyButton.textContent = originalText;
+      copyButton.classList.remove('copied');
+    }, 2000);
+  } catch (error) {
+    console.error('복사 실패:', error);
+    // 클립보드 API가 실패하면 fallback 방법 시도
+    try {
+      const textArea = document.createElement('textarea');
+      textArea.value = resultText;
+      textArea.style.position = 'fixed';
+      textArea.style.opacity = '0';
+      document.body.appendChild(textArea);
+      textArea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textArea);
+
+      const originalText = copyButton.textContent;
+      copyButton.textContent = '✅ 복사됨';
+      copyButton.classList.add('copied');
+
+      setTimeout(() => {
+        copyButton.textContent = originalText;
+        copyButton.classList.remove('copied');
+      }, 2000);
+    } catch (fallbackError) {
+      console.error('Fallback 복사도 실패:', fallbackError);
+      copyButton.textContent = '❌ 실패';
+      setTimeout(() => {
+        copyButton.textContent = '📋 복사';
+      }, 2000);
+    }
+  }
+}
+
+/**
  * 초기화
  */
 function handleClear() {
@@ -316,5 +396,7 @@ function handleClear() {
   showResult('결과가 여기에 표시됩니다...', false);
   decoderTypeSelect.value = 'auto';
   metadataContainer.style.display = 'none';
+  copyButton.textContent = '📋 복사';
+  copyButton.classList.remove('copied');
   inputTextarea.focus();
 }
