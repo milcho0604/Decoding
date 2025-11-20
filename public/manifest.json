@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "유니버설 디코더",
+  "name": "Universal Decoder",
   "version": "1.0.0",
   "description": "다양한 형식의 텍스트를 디코딩하는 도구 (URL, HTML, Base64, Hex, JWT, ROT13, GZIP 등)",
   "action": {
