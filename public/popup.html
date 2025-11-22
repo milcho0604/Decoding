@@ -359,6 +359,21 @@
         font-weight: 600;
         margin-bottom: 4px;
       }
+
+      .detected-badge {
+        padding: 4px 10px;
+        border-radius: 12px;
+        font-size: 11px;
+        font-weight: 500;
+        background: var(--btn-primary);
+        color: white;
+        white-space: nowrap;
+        transition: all 0.2s;
+      }
+
+      body.dark-mode .detected-badge {
+        background: var(--btn-primary);
+      }
     </style>
   </head>
   <body>
@@ -376,7 +391,10 @@
       </div>
       <div class="content">
         <div class="section">
-          <label for="decoder-type">디코딩 방식</label>
+          <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+            <label for="decoder-type">디코딩 방식</label>
+            <span id="detected-type-badge" class="detected-badge" style="display: none;"></span>
+          </div>
           <select id="decoder-type">
             <!-- 옵션은 JavaScript에서 동적으로 추가 -->
           </select>

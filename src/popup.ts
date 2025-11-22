@@ -9,6 +9,7 @@ let resultContainer: HTMLDivElement;
 let metadataContainer: HTMLDivElement;
 let themeToggle: HTMLButtonElement;
 let copyButton: HTMLButtonElement;
+let detectedTypeBadge: HTMLSpanElement;
 
 // 초기화
 document.addEventListener('DOMContentLoaded', async () => {
@@ -29,6 +30,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   ) as HTMLDivElement;
   themeToggle = document.getElementById('theme-toggle') as HTMLButtonElement;
   copyButton = document.getElementById('copy-btn') as HTMLButtonElement;
+  detectedTypeBadge = document.getElementById('detected-type-badge') as HTMLSpanElement;
 
   console.log('DOM elements loaded');
 
@@ -246,16 +248,22 @@ async function handleDecode() {
     if (result.success) {
       showResult(result.result, true, undefined, result.metadata);
 
-      // 자동 감지 모드에서 감지된 타입이 있으면 선택 표시
+      // 자동 감지 모드에서 감지된 타입이 있으면 뱃지 표시
       if (decoderType === 'auto' && result.type !== 'auto') {
         const detectedLabel =
           DecoderService.getAvailableDecoders().find(
             (d) => d.value === result.type
           )?.label || '';
-        // 선택은 유지하되, 사용자에게 알림 (선택적)
+        if (detectedLabel) {
+          detectedTypeBadge.textContent = `✓ ${detectedLabel}`;
+          detectedTypeBadge.style.display = 'inline-block';
+        }
+      } else {
+        detectedTypeBadge.style.display = 'none';
       }
     } else {
       showResult(result.error || '디코딩 실패', false, result.error);
+      detectedTypeBadge.style.display = 'none';
     }
   } catch (error) {
     showResult('오류가 발생했습니다: ' + (error as Error).message, false);
@@ -396,6 +404,7 @@ function handleClear() {
   showResult('결과가 여기에 표시됩니다...', false);
   decoderTypeSelect.value = 'auto';
   metadataContainer.style.display = 'none';
+  detectedTypeBadge.style.display = 'none';
   copyButton.textContent = '📋 복사';
   copyButton.classList.remove('copied');
   inputTextarea.focus();
