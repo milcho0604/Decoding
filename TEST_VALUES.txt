@@ -1,0 +1,42 @@
+=== 유니버설 디코더 테스트 값 ===
+
+1. URL 디코딩
+%EC%9C%A0%EB%8B%88%EB%B2%84%EC%84%A4%20%EB%94%94%EC%BD%94%EB%8D%94%20%ED%85%8C%EC%8A%A4%ED%8A%B8
+→ 결과: 유니버설 디코더 테스트
+
+2. HTML 엔티티
+&lt;div&gt;Hello &amp; World&lt;/div&gt;
+→ 결과: <div>Hello & World</div>
+
+3. Base64
+SGVsbG8gV29ybGQhIOycoOuLiOuyhOyEpCDrlJTsvZTrjZQ=
+→ 결과: Hello World! 유니버설 디코더
+
+4. Base64URL
+VGVzdCBCYXNlNjRVUkw
+→ 결과: Test Base64URL
+
+5. JWT
+eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.fake_signature
+→ 결과: JWT 헤더와 페이로드가 JSON으로 표시됨
+
+6. Hex 문자열
+48656c6c6f20486578
+→ 결과: Hello Hex
+
+7. CharCode 배열
+[72,101,108,108,111,32,87,111,114,108,100]
+→ 결과: Hello World
+
+8. ROT13
+Uryyb Jbeyq
+→ 결과: Hello World
+
+9. Base64 + GZIP
+H4sIAAAAAAAAE/NIzcnJVwjPL8pJUVQIycgsVsgsVkhUcI/yDFBIzs8tKEotLk5NUSguKcrMS9cDADTEejsuAAAA
+→ 결과: Hello World! This is a GZIP compressed string.
+
+10. JSON Pretty Print
+{"name":"유니버설 디코더","version":"1.0.0","features":["Base64","URL","JWT"]}
+→ 결과: 보기 좋게 포맷팅된 JSON
+
