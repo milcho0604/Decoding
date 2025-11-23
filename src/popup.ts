@@ -24,6 +24,8 @@ let detectedTypeBadge: HTMLSpanElement;
 let autoFetchToggle: HTMLButtonElement;
 let storageSection: HTMLDivElement;
 let storageListContainer: HTMLDivElement;
+let openSidePanelBtn: HTMLButtonElement;
+let openWindowBtn: HTMLButtonElement;
 
 // 초기화
 document.addEventListener('DOMContentLoaded', async () => {
@@ -48,6 +50,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   autoFetchToggle = document.getElementById('auto-fetch-toggle') as HTMLButtonElement;
   storageSection = document.getElementById('storage-section') as HTMLDivElement;
   storageListContainer = document.getElementById('storage-list-container') as HTMLDivElement;
+  openSidePanelBtn = document.getElementById('open-sidepanel-btn') as HTMLButtonElement;
+  openWindowBtn = document.getElementById('open-window-btn') as HTMLButtonElement;
 
   console.log('DOM elements loaded');
 
@@ -120,6 +124,12 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // Auto-Fetch 토글 버튼
   autoFetchToggle.addEventListener('click', toggleAutoFetch);
+
+  // Side Panel 열기 버튼
+  openSidePanelBtn.addEventListener('click', openSidePanel);
+
+  // 새 창 열기 버튼
+  openWindowBtn.addEventListener('click', openNewWindow);
 });
 
 /**
@@ -571,4 +581,50 @@ function handleClear() {
   copyButton.textContent = '📋 복사';
   copyButton.classList.remove('copied');
   inputTextarea.focus();
+}
+
+/**
+ * Side Panel 열기
+ */
+async function openSidePanel() {
+  try {
+    // 현재 탭의 windowId 가져오기
+    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+    const windowId = tab.windowId;
+
+    const response = await chrome.runtime.sendMessage({
+      action: 'openSidePanel',
+      windowId: windowId
+    });
+
+    if (response && response.success) {
+      console.log('Side Panel opened successfully');
+      // Popup 닫기 (선택사항)
+      // window.close();
+    } else {
+      console.error('Failed to open side panel:', response?.error);
+      alert('Side Panel을 열 수 없습니다.\n' + (response?.error || '알 수 없는 오류'));
+    }
+  } catch (error) {
+    console.error('Failed to send message:', error);
+    alert('Side Panel을 열 수 없습니다.');
+  }
+}
+
+/**
+ * 새 창으로 열기
+ */
+async function openNewWindow() {
+  try {
+    await chrome.windows.create({
+      url: chrome.runtime.getURL('popup.html'),
+      type: 'popup',
+      width: 500,
+      height: 620,
+    });
+    console.log('New window opened');
+  } catch (error) {
+    console.error('Failed to open new window:', error);
+    alert('새 창을 열 수 없습니다.');
+  }
 }
