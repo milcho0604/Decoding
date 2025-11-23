@@ -1,77 +1,193 @@
-# 크롬 웹 스토어 출시 설명
+# 🔓 Universal Decoder
 
-## 짧은 설명 (Short Description)
+> 개발자를 위한 올인원 디코딩 도구 - 모든 인코딩 형식을 한 번에!
 
-**132자 이내 권장 - manifest.json의 description에 사용**
+**Universal Decoder**는 다양한 인코딩 형식을 자동으로 감지하고 디코딩하는 Chrome 확장 프로그램입니다. URL, Base64, JWT, Hex, ROT13 등 10가지 이상의 형식을 지원하며, 개발자의 생산성을 높이는 강력한 도구입니다.
 
-```
-다양한 형식의 텍스트를 자동 감지하여 디코딩하는 올인원 도구. URL, HTML, Base64, JWT, Hex, ROT13, GZIP 등 10가지 이상의 형식을 지원합니다.
-```
+## ✨ 주요 기능
 
----
+### 🎯 자동 감지
+- 입력된 텍스트를 자동으로 분석하여 적절한 디코딩 방법을 감지
+- 붙여넣기만 하면 자동으로 디코딩 (Auto mode)
+- 감지된 디코딩 타입을 뱃지로 표시
 
-## 상세 설명 (Detailed Description)
+### 🔄 Auto-Fetch 모드 (NEW!)
+- 현재 페이지의 **localStorage**, **sessionStorage**, **Cookies**를 자동 수집
+- 클릭 한 번으로 즉시 디코딩 - 복사/붙여넣기 불필요
+- 개발자의 반복 작업을 획기적으로 단축
 
-**크롬 웹 스토어 페이지에 표시되는 본문**
+### 📋 지원하는 디코딩 형식
 
-### 🔓 유니버설 디코더 - 모든 인코딩 형식을 한 번에!
-
-**유니버설 디코더**는 개발자, 보안 연구원, 그리고 데이터 분석가를 위한 강력한 디코딩 도구입니다. 복잡한 인코딩 형식을 빠르고 쉽게 디코딩할 수 있도록 도와줍니다.
-
-### ✨ 주요 기능
-
-**🎯 자동 감지 기능**
-
-- 입력된 텍스트를 자동으로 분석하여 적절한 디코딩 방법을 감지합니다
-- 복사한 텍스트를 붙여넣기만 하면 자동으로 디코딩됩니다
-- 수동으로 디코딩 타입을 선택할 수도 있습니다
-
-**📋 지원하는 디코딩 형식**
-
-- **URL 디코딩**: URL 인코딩된 문자열을 일반 텍스트로 변환
-- **HTML 엔티티**: HTML 특수 문자 엔티티를 디코딩
-- **Base64**: Base64 인코딩된 데이터 디코딩
-- **Base64URL**: URL-safe Base64 형식 디코딩
-- **JWT**: JSON Web Token을 헤더와 페이로드로 분해하여 표시
-- **Hex 문자열**: 16진수 문자열을 텍스트로 변환
-- **CharCode 배열**: 숫자 배열을 문자로 변환
-- **ROT13**: ROT13 암호화된 텍스트 디코딩
-- **GZIP**: Base64로 인코딩된 GZIP 압축 데이터 디코딩
-- **JSON Pretty Print**: JSON 문자열을 보기 좋게 포맷팅
-
-### 🚀 사용 방법
-
-1. 확장 프로그램 아이콘을 클릭하여 팝업을 엽니다
-2. 디코딩할 텍스트를 입력하거나 붙여넣습니다
-3. 자동 감지 모드에서는 즉시 결과를 확인할 수 있습니다
-4. 원하는 디코딩 타입을 직접 선택할 수도 있습니다
-5. Enter 키를 눌러 빠르게 디코딩하거나, ESC 키로 팝업을 닫을 수 있습니다
-
-### 💡 사용 사례
-
-- **개발자**: API 응답, JWT 토큰, 인코딩된 데이터 분석
-- **보안 연구원**: 암호화된 문자열, 인코딩된 페이로드 분석
-- **데이터 분석가**: 다양한 형식의 인코딩된 데이터 디코딩
-- **일반 사용자**: URL 인코딩된 링크, HTML 엔티티 디코딩
+| 형식 | 설명 | 예시 |
+|------|------|------|
+| **URL** | URL 인코딩된 문자열 디코딩 | `%ED%95%9C%EA%B8%80` → `한글` |
+| **HTML** | HTML 엔티티 디코딩 | `&lt;div&gt;` → `<div>` |
+| **Base64** | Base64 인코딩 디코딩 (UTF-8 지원) | `7ZWc6riA` → `한글` |
+| **Base64URL** | URL-safe Base64 디코딩 | `7ZWc6riA` (- _ 포함) |
+| **JWT** | JSON Web Token 헤더/페이로드 분리 | `eyJ...` → Header + Payload |
+| **Hex** | 16진수 문자열 → 텍스트 | `48656c6c6f` → `Hello` |
+| **CharCode** | 문자 코드 배열 → 텍스트 | `[72,101,108,108,111]` → `Hello` |
+| **ROT13** | ROT13 암호화 디코딩 | `Uryyb` → `Hello` |
+| **GZIP** | Base64 + GZIP 압축 해제 | `H4sIAAAAAAAA...` |
+| **JSON** | JSON Pretty Print | Minified JSON → Formatted |
 
 ### 🎨 편리한 기능
+- 🌙 **다크모드 지원** - 눈의 피로 감소
+- ⌨️ **키보드 단축키** - Enter로 디코딩, ESC로 닫기, Shift+Enter로 줄바꿈
+- 📋 **결과 복사** - 원클릭 복사 버튼
+- 💾 **설정 저장** - 다크모드, 디코더 타입, Auto-Fetch 설정 유지
+- 🔒 **완전한 로컬 처리** - 데이터 외부 전송 없음
 
-- **다크모드 지원**: 눈의 피로를 줄이는 다크 테마 제공
-- **빠른 키보드 단축키**: Enter로 디코딩, ESC로 닫기
-- **자동 포맷팅**: JSON 결과를 자동으로 보기 좋게 포맷팅
-- **메타데이터 표시**: JWT 토큰의 헤더와 페이로드를 분리하여 표시
-- **설정 저장**: 선호하는 디코딩 타입을 저장하여 다음 사용 시 자동 적용
+## 🚀 설치 방법
 
-### 🔒 개인정보 보호
+### Chrome 웹 스토어에서 설치 (사용자용)
+*Coming soon - 스토어 출시 예정*
 
-- 모든 디코딩은 로컬에서 처리되며, 데이터가 외부로 전송되지 않습니다
-- 인터넷 연결이 필요 없습니다
-- 개인정보를 수집하거나 저장하지 않습니다
+### 개발자 모드로 설치
+1. 이 저장소를 클론합니다
+   ```bash
+   git clone https://github.com/yourusername/universal-decoder.git
+   cd universal-decoder
+   ```
 
-### 📝 업데이트 및 피드백
+2. 의존성을 설치합니다
+   ```bash
+   npm install
+   ```
 
-버그 리포트나 기능 제안은 개발자 블로그를 통해 문의해주세요.
+3. 프로젝트를 빌드합니다
+   ```bash
+   npm run build
+   ```
+
+4. Chrome에서 확장 프로그램을 로드합니다
+   - `chrome://extensions/` 접속
+   - 우측 상단의 "개발자 모드" 활성화
+   - "압축해제된 확장 프로그램을 로드합니다" 클릭
+   - `dist/` 폴더 선택
+
+## 📖 사용 방법
+
+### 기본 사용법
+1. 확장 프로그램 아이콘 클릭
+2. 디코딩할 텍스트 입력 또는 붙여넣기
+3. 자동으로 감지되어 디코딩됨
+4. 필요 시 디코딩 타입 수동 선택 가능
+
+### Auto-Fetch 모드
+1. 확장 프로그램 팝업 열기
+2. 헤더의 🔄 버튼 클릭 (Auto-Fetch 활성화)
+3. 현재 페이지의 Storage/Cookie 목록 자동 표시
+4. 원하는 항목 클릭 → 자동 디코딩
+
+> **Tip**: 처음 사용 시 페이지를 새로고침해야 Content Script가 로드됩니다.
+
+## 🛠️ 개발 가이드
+
+### 프로젝트 구조
+```
+Decoding/
+├── public/              # 정적 파일
+│   ├── manifest.json    # Chrome Extension manifest
+│   ├── popup.html       # Popup UI
+│   └── icons/           # 아이콘 파일
+├── src/
+│   ├── popup.ts         # Popup 로직
+│   ├── content.ts       # Content Script (Storage 수집)
+│   ├── background.ts    # Background Service Worker
+│   ├── decoderService.ts # 디코더 서비스 (자동 감지)
+│   └── decoders/        # 개별 디코더 클래스
+│       ├── base64Decoder.ts
+│       ├── jwtDecoder.ts
+│       └── ...
+├── dist/                # 빌드 출력 (gitignore)
+└── vite.config.ts       # Vite 설정
+```
+
+### 빌드 명령어
+```bash
+# 프로덕션 빌드
+npm run build
+
+# 개발 모드 (watch mode)
+npm run dev
+```
+
+### 새로운 디코더 추가하기
+1. `src/decoders/` 에 새 파일 생성 (예: `myDecoder.ts`)
+2. `decode()`와 `canDecode()` 정적 메서드 구현
+   ```typescript
+   export class MyDecoder {
+     static decode(input: string): string {
+       // 디코딩 로직
+       return result;
+     }
+
+     static canDecode(input: string): boolean {
+       // 이 형식인지 검증
+       return true/false;
+     }
+   }
+   ```
+3. `src/decoders/index.ts`에 export 추가
+4. `src/decoderService.ts`에 import 및 우선순위 설정
+
+## 🔧 기술 스택
+
+- **TypeScript** - 타입 안전성
+- **Vite** - 빠른 빌드 도구
+- **Chrome Extension Manifest V3** - 최신 표준
+- **Vanilla JavaScript** - 프레임워크 없는 경량화
+
+## 🎯 디자인 원칙
+
+1. **정확도 우선** - 오인식 방지를 위한 엄격한 검증
+   - 최소 길이 요구사항
+   - 실제 디코딩 테스트
+   - 패턴 및 비율 검증
+
+2. **사용자 경험** - 개발자 친화적 UX
+   - 자동 감지로 수동 선택 최소화
+   - Auto-Fetch로 반복 작업 제거
+   - 키보드 단축키 지원
+
+3. **보안 및 프라이버시**
+   - 모든 데이터 로컬 처리
+   - XSS 방지 (HTML 이스케이프)
+   - 최소 권한 원칙
+
+## 📝 권한 설명
+
+| 권한 | 사용 목적 |
+|------|----------|
+| `storage` | 다크모드, 디코더 타입, Auto-Fetch 설정 저장 |
+| `cookies` | Auto-Fetch 모드에서 쿠키 데이터 읽기 |
+| `activeTab` | 현재 탭의 URL 확인 (시스템 페이지 차단용) |
+| `host_permissions` | Content Script 주입 (localStorage/sessionStorage 접근) |
+
+> **보안**: Content Script는 사용자가 Auto-Fetch를 활성화할 때만 데이터를 수집하며, 모든 데이터는 로컬에서만 처리됩니다.
+
+## 🤝 기여하기
+
+기여를 환영합니다! 다음과 같은 방법으로 참여할 수 있습니다:
+
+1. 이슈 등록 - 버그 리포트, 기능 제안
+2. Pull Request - 코드 개선, 새로운 디코더 추가
+3. 문서화 - README, 코드 주석 개선
+
+### 기여 가이드라인
+- 커밋 메시지는 명확하게 작성 (feat:, fix:, docs:, refactor: 등)
+- TypeScript strict mode 준수
+- 새로운 디코더는 테스트 케이스 포함
+
+## 📄 라이센스
+
+이 프로젝트는 MIT 라이센스 하에 배포됩니다.
+
+## 🙏 크레딧
+
+개발자: [milcho](https://velog.io/@milcho0604/posts)
 
 ---
 
-**유니버설 디코더로 모든 인코딩 형식을 쉽고 빠르게 디코딩하세요!**
+**Universal Decoder로 모든 인코딩 형식을 쉽고 빠르게 디코딩하세요!** 🚀
