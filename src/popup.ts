@@ -40,6 +40,9 @@ let historySection: HTMLDivElement;
 let historyListContainer: HTMLDivElement;
 let historyRecentContainer: HTMLDivElement;
 let clearHistoryBtn: HTMLButtonElement;
+let selectAllCheckbox: HTMLInputElement;
+let deleteSelectedBtn: HTMLButtonElement;
+let selectedHistoryIds: Set<string> = new Set();
 
 // 초기화
 document.addEventListener('DOMContentLoaded', async () => {
@@ -70,6 +73,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   historyListContainer = document.getElementById('history-list-container') as HTMLDivElement;
   historyRecentContainer = document.getElementById('history-recent-container') as HTMLDivElement;
   clearHistoryBtn = document.getElementById('clear-history-btn') as HTMLButtonElement;
+  selectAllCheckbox = document.getElementById('select-all-checkbox') as HTMLInputElement;
+  deleteSelectedBtn = document.getElementById('delete-selected-btn') as HTMLButtonElement;
 
   console.log('DOM elements loaded');
 
@@ -154,6 +159,12 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // 히스토리 삭제 버튼
   clearHistoryBtn.addEventListener('click', clearAllHistory);
+
+  // 전체 선택 체크박스
+  selectAllCheckbox.addEventListener('change', handleSelectAll);
+
+  // 선택 삭제 버튼
+  deleteSelectedBtn.addEventListener('click', deleteSelectedHistory);
 });
 
 /**
@@ -748,9 +759,11 @@ async function loadHistory() {
 function updateHistoryList(history: HistoryItem[]) {
   historyListContainer.innerHTML = '';
   historyRecentContainer.innerHTML = '';
+  selectedHistoryIds.clear();
 
   if (history.length === 0) {
     historySection.style.display = 'none';
+    updateSelectionUI();
     return;
   }
 
@@ -775,6 +788,8 @@ function updateHistoryList(history: HistoryItem[]) {
   } else {
     historyListContainer.classList.remove('visible');
   }
+
+  updateSelectionUI();
 }
 
 /**
@@ -806,6 +821,10 @@ function createHistoryItem(item: HistoryItem, isRecent: boolean = false, hasMore
   const arrowIcon = isRecent && hasMore ? '<button class="history-item-arrow" title="목록 펼치기/접기">▼</button>' : '';
 
   itemDiv.innerHTML = `
+    <div class="history-item-checkbox">
+      <input type="checkbox" class="history-checkbox" data-id="${item.id}" id="history-${item.id}">
+      <label for="history-${item.id}"></label>
+    </div>
     <div class="history-item-actions">
       ${arrowIcon}
       <button class="history-item-delete" data-id="${item.id}" title="삭제">🗑️</button>
@@ -833,6 +852,11 @@ function createHistoryItem(item: HistoryItem, isRecent: boolean = false, hasMore
         return;
       }
 
+      // 체크박스 클릭은 무시
+      if ((e.target as HTMLElement).closest('.history-item-checkbox')) {
+        return;
+      }
+
       // 항목 클릭 시 입력 필드에 복원하고 디코딩
       inputTextarea.value = item.input;
       decoderTypeSelect.value = item.decoderType;
@@ -843,6 +867,11 @@ function createHistoryItem(item: HistoryItem, isRecent: boolean = false, hasMore
     itemDiv.addEventListener('click', (e) => {
       // 삭제 버튼 클릭은 무시
       if ((e.target as HTMLElement).classList.contains('history-item-delete')) {
+        return;
+      }
+
+      // 체크박스 클릭은 무시
+      if ((e.target as HTMLElement).closest('.history-item-checkbox')) {
         return;
       }
 
@@ -874,6 +903,26 @@ function createHistoryItem(item: HistoryItem, isRecent: boolean = false, hasMore
         toggleHistoryExpand();
       });
     }
+  }
+
+  // 체크박스 이벤트
+  const checkbox = itemDiv.querySelector(
+    '.history-checkbox'
+  ) as HTMLInputElement;
+  if (checkbox) {
+    checkbox.addEventListener('click', (e) => {
+      e.stopPropagation();
+    });
+    checkbox.addEventListener('change', (e) => {
+      e.stopPropagation();
+      const isChecked = checkbox.checked;
+      if (isChecked) {
+        selectedHistoryIds.add(item.id);
+      } else {
+        selectedHistoryIds.delete(item.id);
+      }
+      updateSelectionUI();
+    });
   }
 
   return itemDiv;
@@ -943,10 +992,103 @@ async function clearAllHistory() {
       chrome.storage.local
     ) {
       await chrome.storage.local.set({ decoderHistory: [] });
+      selectedHistoryIds.clear();
       await loadHistory();
     }
   } catch (error) {
     console.error('Failed to clear history:', error);
     alert('히스토리 삭제에 실패했습니다.');
+  }
+}
+
+/**
+ * 전체 선택/해제
+ */
+function handleSelectAll() {
+  const isChecked = selectAllCheckbox.checked;
+  const allCheckboxes = document.querySelectorAll('.history-checkbox') as NodeListOf<HTMLInputElement>;
+  
+  allCheckboxes.forEach((checkbox) => {
+    checkbox.checked = isChecked;
+    const id = checkbox.getAttribute('data-id');
+    if (id) {
+      if (isChecked) {
+        selectedHistoryIds.add(id);
+      } else {
+        selectedHistoryIds.delete(id);
+      }
+    }
+  });
+  
+  updateSelectionUI();
+}
+
+/**
+ * 선택된 히스토리 삭제
+ */
+async function deleteSelectedHistory() {
+  if (selectedHistoryIds.size === 0) {
+    alert('삭제할 항목을 선택해주세요.');
+    return;
+  }
+
+  if (
+    !confirm(`선택한 ${selectedHistoryIds.size}개의 히스토리를 삭제하시겠습니까?\n이 작업은 되돌릴 수 없습니다.`)
+  ) {
+    return;
+  }
+
+  try {
+    if (
+      typeof chrome !== 'undefined' &&
+      chrome.storage &&
+      chrome.storage.local
+    ) {
+      const storageResult = await chrome.storage.local.get(['decoderHistory']);
+      const history: HistoryItem[] = storageResult.decoderHistory || [];
+
+      const filtered = history.filter((item) => !selectedHistoryIds.has(item.id));
+      await chrome.storage.local.set({ decoderHistory: filtered });
+
+      selectedHistoryIds.clear();
+      await loadHistory();
+    }
+  } catch (error) {
+    console.error('Failed to delete selected history:', error);
+    alert('히스토리 삭제에 실패했습니다.');
+  }
+}
+
+/**
+ * 선택 UI 업데이트
+ */
+function updateSelectionUI() {
+  const totalCount = document.querySelectorAll('.history-checkbox').length;
+  const selectedCount = selectedHistoryIds.size;
+  
+  // 전체 선택 체크박스 상태 업데이트
+  if (totalCount === 0) {
+    selectAllCheckbox.checked = false;
+    selectAllCheckbox.indeterminate = false;
+  } else if (selectedCount === totalCount) {
+    selectAllCheckbox.checked = true;
+    selectAllCheckbox.indeterminate = false;
+  } else if (selectedCount > 0) {
+    selectAllCheckbox.checked = false;
+    selectAllCheckbox.indeterminate = true;
+  } else {
+    selectAllCheckbox.checked = false;
+    selectAllCheckbox.indeterminate = false;
+  }
+
+  // 선택 삭제 버튼 상태 업데이트
+  if (selectedCount > 0) {
+    deleteSelectedBtn.disabled = false;
+    deleteSelectedBtn.textContent = `선택 삭제 (${selectedCount})`;
+    deleteSelectedBtn.style.opacity = '1';
+  } else {
+    deleteSelectedBtn.disabled = true;
+    deleteSelectedBtn.textContent = '선택 삭제';
+    deleteSelectedBtn.style.opacity = '0.5';
   }
 }
