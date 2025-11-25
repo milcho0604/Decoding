@@ -457,6 +457,105 @@
         font-size: 12px;
         font-style: italic;
       }
+
+      .history-list-container {
+        display: none;
+        max-height: 200px;
+        overflow-y: auto;
+        border: 1px solid var(--border-color);
+        border-radius: 6px;
+        background: var(--bg-secondary);
+        transition: background-color 0.3s, border-color 0.3s;
+      }
+
+      .history-list-container.visible {
+        display: block;
+      }
+
+      .history-item {
+        padding: 10px 12px;
+        border-bottom: 1px solid var(--border-color);
+        cursor: pointer;
+        transition: background-color 0.2s;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        position: relative;
+      }
+
+      .history-item:last-child {
+        border-bottom: none;
+      }
+
+      .history-item:hover {
+        background: var(--bg-tertiary);
+      }
+
+      .history-item-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .history-item-type {
+        padding: 2px 8px;
+        border-radius: 4px;
+        font-size: 10px;
+        font-weight: 500;
+        background: var(--btn-primary);
+        color: white;
+        flex-shrink: 0;
+      }
+
+      .history-item-time {
+        font-size: 10px;
+        color: var(--text-tertiary);
+        flex: 1;
+        text-align: right;
+      }
+
+      .history-item-delete {
+        background: transparent;
+        border: none;
+        color: var(--text-tertiary);
+        font-size: 18px;
+        font-weight: bold;
+        cursor: pointer;
+        padding: 0;
+        width: 20px;
+        height: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 4px;
+        transition: all 0.2s;
+        flex-shrink: 0;
+        line-height: 1;
+      }
+
+      .history-item-delete:hover {
+        background: var(--error-bg);
+        color: var(--error-text);
+      }
+
+      .history-item-input {
+        font-family: 'Monaco', 'Menlo', 'Courier New', monospace;
+        font-size: 11px;
+        color: var(--text-secondary);
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        padding-left: 4px;
+      }
+
+      .history-list-empty {
+        padding: 20px;
+        text-align: center;
+        color: var(--text-tertiary);
+        font-size: 12px;
+        font-style: italic;
+      }
     </style>
   </head>
   <body>
@@ -496,6 +595,16 @@
           <label>Storage / Cookie 목록</label>
           <div id="storage-list-container" class="storage-list-container">
             <div class="storage-list-empty">Auto-Fetch 모드를 활성화하면 현재 페이지의 Storage와 Cookie를 가져옵니다.</div>
+          </div>
+        </div>
+
+        <div class="section" id="history-section" style="display: none;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+            <label>디코딩 히스토리</label>
+            <button class="btn-copy" id="clear-history-btn" style="font-size: 11px; padding: 4px 8px;">전체 삭제</button>
+          </div>
+          <div id="history-list-container" class="history-list-container">
+            <div class="history-list-empty">히스토리가 없습니다.</div>
           </div>
         </div>
 

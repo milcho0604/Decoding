@@ -11,6 +11,16 @@ interface StorageData {
   items: StorageItem[];
 }
 
+// 히스토리 관련 인터페이스
+interface HistoryItem {
+  id: string;
+  input: string;
+  decoderType: DecoderType;
+  result: string;
+  timestamp: number;
+  decoderLabel: string;
+}
+
 // DOM 요소
 let decoderTypeSelect: HTMLSelectElement;
 let inputTextarea: HTMLTextAreaElement;
@@ -26,6 +36,9 @@ let storageSection: HTMLDivElement;
 let storageListContainer: HTMLDivElement;
 let openSidePanelBtn: HTMLButtonElement;
 let openWindowBtn: HTMLButtonElement;
+let historySection: HTMLDivElement;
+let historyListContainer: HTMLDivElement;
+let clearHistoryBtn: HTMLButtonElement;
 
 // 초기화
 document.addEventListener('DOMContentLoaded', async () => {
@@ -52,6 +65,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   storageListContainer = document.getElementById('storage-list-container') as HTMLDivElement;
   openSidePanelBtn = document.getElementById('open-sidepanel-btn') as HTMLButtonElement;
   openWindowBtn = document.getElementById('open-window-btn') as HTMLButtonElement;
+  historySection = document.getElementById('history-section') as HTMLDivElement;
+  historyListContainer = document.getElementById('history-list-container') as HTMLDivElement;
+  clearHistoryBtn = document.getElementById('clear-history-btn') as HTMLButtonElement;
 
   console.log('DOM elements loaded');
 
@@ -130,6 +146,12 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // 새 창 열기 버튼
   openWindowBtn.addEventListener('click', openNewWindow);
+
+  // 히스토리 초기화
+  await initializeHistory();
+
+  // 히스토리 삭제 버튼
+  clearHistoryBtn.addEventListener('click', clearAllHistory);
 });
 
 /**
@@ -421,6 +443,9 @@ async function handleDecode() {
     if (result.success) {
       showResult(result.result, true, undefined, result.metadata);
 
+      // 히스토리에 저장
+      await saveToHistory(input, decoderType, result.result, result.type);
+
       // 자동 감지 모드에서 감지된 타입이 있으면 뱃지 표시
       if (decoderType === 'auto' && result.type !== 'auto') {
         const detectedLabel =
@@ -626,5 +651,208 @@ async function openNewWindow() {
   } catch (error) {
     console.error('Failed to open new window:', error);
     alert('새 창을 열 수 없습니다.');
+  }
+}
+
+/**
+ * 히스토리 초기화 및 로드
+ */
+async function initializeHistory() {
+  try {
+    await loadHistory();
+  } catch (error) {
+    console.error('Failed to initialize history:', error);
+  }
+}
+
+/**
+ * 히스토리 저장
+ */
+async function saveToHistory(
+  input: string,
+  decoderType: DecoderType,
+  result: string,
+  actualType: DecoderType
+) {
+  try {
+    if (
+      typeof chrome !== 'undefined' &&
+      chrome.storage &&
+      chrome.storage.local
+    ) {
+      // 기존 히스토리 가져오기
+      const storageResult = await chrome.storage.local.get(['decoderHistory']);
+      const history: HistoryItem[] = storageResult.decoderHistory || [];
+
+      // 디코더 라벨 가져오기
+      const decoderLabel =
+        DecoderService.getAvailableDecoders().find(
+          (d) => d.value === actualType !== 'auto' ? actualType : decoderType
+        )?.label || '자동 감지';
+
+      // 새 히스토리 항목 생성
+      const newItem: HistoryItem = {
+        id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
+        input: input.substring(0, 200), // 최대 200자로 제한
+        decoderType: actualType !== 'auto' ? actualType : decoderType,
+        result: result.substring(0, 200), // 최대 200자로 제한
+        timestamp: Date.now(),
+        decoderLabel: decoderLabel,
+      };
+
+      // 최신 항목을 맨 앞에 추가
+      history.unshift(newItem);
+
+      // 최대 50개까지만 저장
+      const maxHistory = 50;
+      if (history.length > maxHistory) {
+        history.splice(maxHistory);
+      }
+
+      // 저장
+      await chrome.storage.local.set({ decoderHistory: history });
+
+      // UI 업데이트
+      await loadHistory();
+    }
+  } catch (error) {
+    console.error('Failed to save history:', error);
+  }
+}
+
+/**
+ * 히스토리 로드 및 표시
+ */
+async function loadHistory() {
+  try {
+    if (
+      typeof chrome !== 'undefined' &&
+      chrome.storage &&
+      chrome.storage.local
+    ) {
+      const storageResult = await chrome.storage.local.get(['decoderHistory']);
+      const history: HistoryItem[] = storageResult.decoderHistory || [];
+
+      updateHistoryList(history);
+    }
+  } catch (error) {
+    console.error('Failed to load history:', error);
+  }
+}
+
+/**
+ * 히스토리 리스트 UI 업데이트
+ */
+function updateHistoryList(history: HistoryItem[]) {
+  historyListContainer.innerHTML = '';
+
+  if (history.length === 0) {
+    historyListContainer.innerHTML =
+      '<div class="history-list-empty">히스토리가 없습니다.</div>';
+    historySection.style.display = 'none';
+    return;
+  }
+
+  historySection.style.display = 'block';
+  historyListContainer.classList.add('visible');
+
+  history.forEach((item) => {
+    const itemDiv = document.createElement('div');
+    itemDiv.className = 'history-item';
+
+    // 시간 포맷팅
+    const date = new Date(item.timestamp);
+    const timeStr = date.toLocaleString('ko-KR', {
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+
+    // 입력 텍스트 미리보기 (긴 경우 자르기)
+    const inputPreview =
+      item.input.length > 60
+        ? item.input.substring(0, 60) + '...'
+        : item.input;
+
+    itemDiv.innerHTML = `
+      <div class="history-item-header">
+        <span class="history-item-type">${escapeHtml(item.decoderLabel)}</span>
+        <span class="history-item-time">${escapeHtml(timeStr)}</span>
+        <button class="history-item-delete" data-id="${item.id}" title="삭제">×</button>
+      </div>
+      <div class="history-item-input">${escapeHtml(inputPreview)}</div>
+    `;
+
+    // 클릭 시 입력 필드에 복원하고 디코딩
+    itemDiv.addEventListener('click', (e) => {
+      // 삭제 버튼 클릭은 무시
+      if ((e.target as HTMLElement).classList.contains('history-item-delete')) {
+        return;
+      }
+
+      inputTextarea.value = item.input;
+      decoderTypeSelect.value = item.decoderType;
+      handleDecode();
+    });
+
+    // 삭제 버튼 이벤트
+    const deleteBtn = itemDiv.querySelector(
+      '.history-item-delete'
+    ) as HTMLButtonElement;
+    deleteBtn.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      await deleteHistoryItem(item.id);
+    });
+
+    historyListContainer.appendChild(itemDiv);
+  });
+}
+
+/**
+ * 히스토리 항목 삭제
+ */
+async function deleteHistoryItem(id: string) {
+  try {
+    if (
+      typeof chrome !== 'undefined' &&
+      chrome.storage &&
+      chrome.storage.local
+    ) {
+      const storageResult = await chrome.storage.local.get(['decoderHistory']);
+      const history: HistoryItem[] = storageResult.decoderHistory || [];
+
+      const filtered = history.filter((item) => item.id !== id);
+      await chrome.storage.local.set({ decoderHistory: filtered });
+
+      await loadHistory();
+    }
+  } catch (error) {
+    console.error('Failed to delete history item:', error);
+  }
+}
+
+/**
+ * 전체 히스토리 삭제
+ */
+async function clearAllHistory() {
+  if (
+    !confirm('모든 히스토리를 삭제하시겠습니까?\n이 작업은 되돌릴 수 없습니다.')
+  ) {
+    return;
+  }
+
+  try {
+    if (
+      typeof chrome !== 'undefined' &&
+      chrome.storage &&
+      chrome.storage.local
+    ) {
+      await chrome.storage.local.set({ decoderHistory: [] });
+      await loadHistory();
+    }
+  } catch (error) {
+    console.error('Failed to clear history:', error);
+    alert('히스토리 삭제에 실패했습니다.');
   }
 }
