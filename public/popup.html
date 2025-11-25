@@ -458,6 +458,17 @@
         font-style: italic;
       }
 
+      .history-recent-container {
+        margin-bottom: 8px;
+      }
+
+      .history-recent-container .history-item {
+        border: 1px solid var(--border-color);
+        border-radius: 6px;
+        background: var(--bg-secondary);
+      }
+
+
       .history-list-container {
         display: none;
         max-height: 200px;
@@ -474,16 +485,19 @@
 
       .history-item {
         padding: 10px 12px;
-        border-bottom: 1px solid var(--border-color);
         cursor: pointer;
         transition: background-color 0.2s;
         display: flex;
         flex-direction: column;
-        gap: 6px;
+        gap: 8px;
         position: relative;
       }
 
-      .history-item:last-child {
+      .history-list-container .history-item {
+        border-bottom: 1px solid var(--border-color);
+      }
+
+      .history-list-container .history-item:last-child {
         border-bottom: none;
       }
 
@@ -491,15 +505,26 @@
         background: var(--bg-tertiary);
       }
 
+      .history-item-actions {
+        position: absolute;
+        top: 8px;
+        right: 8px;
+        display: flex;
+        gap: 4px;
+        align-items: center;
+        z-index: 10;
+      }
+
       .history-item-header {
         display: flex;
         justify-content: space-between;
         align-items: center;
         gap: 8px;
+        padding-right: 60px;
       }
 
       .history-item-type {
-        padding: 2px 8px;
+        padding: 3px 10px;
         border-radius: 4px;
         font-size: 10px;
         font-weight: 500;
@@ -515,16 +540,38 @@
         text-align: right;
       }
 
+      .history-item-arrow {
+        background: transparent;
+        border: none;
+        color: var(--text-tertiary);
+        font-size: 12px;
+        cursor: pointer;
+        padding: 4px 6px;
+        width: 24px;
+        height: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 4px;
+        transition: all 0.2s;
+        flex-shrink: 0;
+        line-height: 1;
+      }
+
+      .history-item-arrow:hover {
+        background: var(--btn-secondary);
+        color: var(--btn-primary);
+      }
+
       .history-item-delete {
         background: transparent;
         border: none;
         color: var(--text-tertiary);
-        font-size: 18px;
-        font-weight: bold;
+        font-size: 14px;
         cursor: pointer;
-        padding: 0;
-        width: 20px;
-        height: 20px;
+        padding: 4px 6px;
+        width: 24px;
+        height: 24px;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -537,6 +584,7 @@
       .history-item-delete:hover {
         background: var(--error-bg);
         color: var(--error-text);
+        transform: scale(1.1);
       }
 
       .history-item-input {
@@ -546,7 +594,7 @@
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
-        padding-left: 4px;
+        padding-right: 60px;
       }
 
       .history-list-empty {
@@ -603,6 +651,7 @@
             <label>디코딩 히스토리</label>
             <button class="btn-copy" id="clear-history-btn" style="font-size: 11px; padding: 4px 8px;">전체 삭제</button>
           </div>
+          <div id="history-recent-container" class="history-recent-container"></div>
           <div id="history-list-container" class="history-list-container">
             <div class="history-list-empty">히스토리가 없습니다.</div>
           </div>

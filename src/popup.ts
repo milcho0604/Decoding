@@ -38,6 +38,7 @@ let openSidePanelBtn: HTMLButtonElement;
 let openWindowBtn: HTMLButtonElement;
 let historySection: HTMLDivElement;
 let historyListContainer: HTMLDivElement;
+let historyRecentContainer: HTMLDivElement;
 let clearHistoryBtn: HTMLButtonElement;
 
 // 초기화
@@ -67,6 +68,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   openWindowBtn = document.getElementById('open-window-btn') as HTMLButtonElement;
   historySection = document.getElementById('history-section') as HTMLDivElement;
   historyListContainer = document.getElementById('history-list-container') as HTMLDivElement;
+  historyRecentContainer = document.getElementById('history-recent-container') as HTMLDivElement;
   clearHistoryBtn = document.getElementById('clear-history-btn') as HTMLButtonElement;
 
   console.log('DOM elements loaded');
@@ -745,46 +747,99 @@ async function loadHistory() {
  */
 function updateHistoryList(history: HistoryItem[]) {
   historyListContainer.innerHTML = '';
+  historyRecentContainer.innerHTML = '';
 
   if (history.length === 0) {
-    historyListContainer.innerHTML =
-      '<div class="history-list-empty">히스토리가 없습니다.</div>';
     historySection.style.display = 'none';
     return;
   }
 
   historySection.style.display = 'block';
-  historyListContainer.classList.add('visible');
 
-  history.forEach((item) => {
-    const itemDiv = document.createElement('div');
-    itemDiv.className = 'history-item';
+  // 최근 1개 항목 표시 (드롭다운 형태)
+  const recentItem = history[0];
+  const recentItemDiv = createHistoryItem(recentItem, true, history.length > 1);
+  historyRecentContainer.appendChild(recentItemDiv);
 
-    // 시간 포맷팅
-    const date = new Date(item.timestamp);
-    const timeStr = date.toLocaleString('ko-KR', {
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
+  // 나머지 항목들 (2개 이상일 때만)
+  if (history.length > 1) {
+    const remainingItems = history.slice(1);
+    
+    remainingItems.forEach((item) => {
+      const itemDiv = createHistoryItem(item, false);
+      historyListContainer.appendChild(itemDiv);
     });
+    
+    // 펼침 상태 초기화
+    historyListContainer.classList.remove('visible');
+  } else {
+    historyListContainer.classList.remove('visible');
+  }
+}
 
-    // 입력 텍스트 미리보기 (긴 경우 자르기)
-    const inputPreview =
-      item.input.length > 60
-        ? item.input.substring(0, 60) + '...'
-        : item.input;
+/**
+ * 히스토리 항목 생성
+ */
+function createHistoryItem(item: HistoryItem, isRecent: boolean = false, hasMore: boolean = false): HTMLDivElement {
+  const itemDiv = document.createElement('div');
+  itemDiv.className = 'history-item';
+  if (isRecent) {
+    itemDiv.classList.add('history-item-recent');
+  }
 
-    itemDiv.innerHTML = `
-      <div class="history-item-header">
-        <span class="history-item-type">${escapeHtml(item.decoderLabel)}</span>
-        <span class="history-item-time">${escapeHtml(timeStr)}</span>
-        <button class="history-item-delete" data-id="${item.id}" title="삭제">×</button>
-      </div>
-      <div class="history-item-input">${escapeHtml(inputPreview)}</div>
-    `;
+  // 시간 포맷팅
+  const date = new Date(item.timestamp);
+  const timeStr = date.toLocaleString('ko-KR', {
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
 
-    // 클릭 시 입력 필드에 복원하고 디코딩
+  // 입력 텍스트 미리보기 (긴 경우 자르기)
+  const inputPreview =
+    item.input.length > 60
+      ? item.input.substring(0, 60) + '...'
+      : item.input;
+
+  // 최근 항목이고 더 많은 항목이 있을 때 화살표 추가
+  const arrowIcon = isRecent && hasMore ? '<button class="history-item-arrow" title="목록 펼치기/접기">▼</button>' : '';
+
+  itemDiv.innerHTML = `
+    <div class="history-item-actions">
+      ${arrowIcon}
+      <button class="history-item-delete" data-id="${item.id}" title="삭제">🗑️</button>
+    </div>
+    <div class="history-item-header">
+      <span class="history-item-type">${escapeHtml(item.decoderLabel)}</span>
+      <span class="history-item-time">${escapeHtml(timeStr)}</span>
+    </div>
+    <div class="history-item-input">${escapeHtml(inputPreview)}</div>
+  `;
+
+  // 최근 항목이고 더 많은 항목이 있을 때 드롭다운 토글
+  if (isRecent && hasMore) {
+    itemDiv.addEventListener('click', (e) => {
+      // 삭제 버튼 클릭은 무시
+      if ((e.target as HTMLElement).classList.contains('history-item-delete')) {
+        return;
+      }
+      
+      // 화살표 버튼 클릭 시 드롭다운 토글
+      if ((e.target as HTMLElement).classList.contains('history-item-arrow') || 
+          (e.target as HTMLElement).closest('.history-item-arrow')) {
+        e.stopPropagation();
+        toggleHistoryExpand();
+        return;
+      }
+
+      // 항목 클릭 시 입력 필드에 복원하고 디코딩
+      inputTextarea.value = item.input;
+      decoderTypeSelect.value = item.decoderType;
+      handleDecode();
+    });
+  } else {
+    // 일반 항목 클릭 시 입력 필드에 복원하고 디코딩
     itemDiv.addEventListener('click', (e) => {
       // 삭제 버튼 클릭은 무시
       if ((e.target as HTMLElement).classList.contains('history-item-delete')) {
@@ -795,18 +850,57 @@ function updateHistoryList(history: HistoryItem[]) {
       decoderTypeSelect.value = item.decoderType;
       handleDecode();
     });
+  }
 
-    // 삭제 버튼 이벤트
-    const deleteBtn = itemDiv.querySelector(
-      '.history-item-delete'
-    ) as HTMLButtonElement;
+  // 삭제 버튼 이벤트
+  const deleteBtn = itemDiv.querySelector(
+    '.history-item-delete'
+  ) as HTMLButtonElement;
+  if (deleteBtn) {
     deleteBtn.addEventListener('click', async (e) => {
       e.stopPropagation();
       await deleteHistoryItem(item.id);
     });
+  }
 
-    historyListContainer.appendChild(itemDiv);
-  });
+  // 화살표 버튼 이벤트 (최근 항목일 때만)
+  if (isRecent && hasMore) {
+    const arrowBtn = itemDiv.querySelector(
+      '.history-item-arrow'
+    ) as HTMLButtonElement;
+    if (arrowBtn) {
+      arrowBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        toggleHistoryExpand();
+      });
+    }
+  }
+
+  return itemDiv;
+}
+
+/**
+ * 히스토리 펼치기/접기 토글
+ */
+function toggleHistoryExpand() {
+  const isExpanded = historyListContainer.classList.contains('visible');
+  const arrow = historyRecentContainer.querySelector('.history-item-arrow') as HTMLButtonElement;
+  
+  if (isExpanded) {
+    historyListContainer.classList.remove('visible');
+    if (arrow) {
+      arrow.textContent = '▼';
+      arrow.classList.remove('expanded');
+      arrow.title = '목록 펼치기';
+    }
+  } else {
+    historyListContainer.classList.add('visible');
+    if (arrow) {
+      arrow.textContent = '▲';
+      arrow.classList.add('expanded');
+      arrow.title = '목록 접기';
+    }
+  }
 }
 
 /**
